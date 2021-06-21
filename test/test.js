@@ -2,6 +2,10 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("MigFinance", function () {
+  beforeEach(() => {
+    //deploy
+  })
+
   it("Should pass all tests", async function () {
     //Deploying Contract ERC20Token
     const MigFinance = await ethers.getContractFactory("MigFinance");
@@ -36,4 +40,11 @@ describe("MigFinance", function () {
     console.log("final bal=", migFinance.balanceOf("0x9109CD2D92B210821313899C5413F94aD5083C39"))
     expect(await migFinance.balanceOf("0x9109CD2D92B210821313899C5413F94aD5083C39")).to.equal("100");
   });
+
+  it("should transfer tokens", async () => { });
+  it("should transfer from sender to receiver", async () => { });
+  it("should deduct fees in transfer", async () => { });
+  it("should deduct fees in transferFrom", async () => { });
+  it("should not transfer when paused", async () => { });
+  it("should not transfer from when paused", async () => { });
 });
