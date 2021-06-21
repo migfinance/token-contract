@@ -10,7 +10,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
     uint256 public constant PERCENTAGE_DECIMAL = 10000;
 
     uint256 public initialSupply = 1000000;
-    uint64 public burnPercentage = 1;
+    uint64 public burnPercentage = 1;   //0.01%
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
