@@ -283,7 +283,6 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         }
 
         // Schedule is active
-        //TODO:
 
         // Work out when the last invocation was
         uint256 timeLastDrawnOrStart =
