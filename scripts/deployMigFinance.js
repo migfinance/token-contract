@@ -1,11 +1,11 @@
 
 const hre = require("hardhat");
 const fs = require('fs');
-
+const { migFinanceConfig } = require("../config/config")
 
 async function main() {
   const MigFinance = await hre.ethers.getContractFactory("MigFinance");
-  const migFinance = await MigFinance.deploy("Mig Finance token", "MIGFINANCE", 10);
+  const migFinance = await MigFinance.deploy(migFinanceConfig.name, migFinanceConfig.symbol);
 
   await migFinance.deployed();
 
