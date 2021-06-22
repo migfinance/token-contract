@@ -76,8 +76,16 @@ contract MigFinance is ERC20, Ownable, Pausable {
         uint256 amount
     ) public override whenNotPaused returns (bool) {
         uint256 _amount = _deduct(sender, amount);
-        decreaseAllowance(recipient, (amount - _amount));
-        return super.transferFrom(sender, recipient, _amount);
+        _transfer(sender, recipient, _amount);
+
+        uint256 currentAllowance = allowance(sender, _msgSender());
+        require(
+            currentAllowance >= amount,
+            "ERC20: transfer amount exceeds allowance"
+        );
+        _approve(sender, _msgSender(), currentAllowance - amount);
+
+        return true;
     }
 
     function _deduct(address sender, uint256 amount)
