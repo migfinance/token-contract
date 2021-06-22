@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test test/test.js",
+    "testToken": "npx hardhat test test/tokenTests/test.js",
+    "testVesting": "npx hardhat test test/VestingTests/test.js",
     "deployMigFinance": "npx hardhat run scripts/deployMigFinance.js",
     "deployMultiSigWallet": "npx hardhat run scripts/deployMultiSigWallet.js",
     "deployVesting": "npx hardhat run scripts/deployVesting.js"

@@ -7,6 +7,8 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ILinearVesting.sol";
 
+import "hardhat/console.sol";
+
 contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     /// @notice start of vesting period as a timestamp
     uint256 public start;
@@ -250,7 +252,9 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
             totalDrawn[_beneficiary] <= vestedAmount[_beneficiary],
             "VestingContract::_drawDown: Safety Mechanism - Drawn exceeded Amount Vested"
         );
-
+        console.log("_beneficiary",_beneficiary);
+        console.log("amount",amount);
+        console.log("Contract token Balance",token.balanceOf(address(this)));
         // Issue tokens to beneficiary
         require(
             token.transfer(_beneficiary, amount),
@@ -272,6 +276,10 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         returns (uint256 _amount)
     {
         // Cliff Period
+        console.log("_getNow",_getNow());
+        console.log("start",start);
+        console.log("end",end);
+        console.log("cliff",cliffDuration);
         if (_getNow() <= start + (cliffDuration)) {
             // the cliff period has not ended, no tokens to draw down
             return 0;
