@@ -9,7 +9,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
     uint256 public constant PERCENTAGE_DECIMAL = 10000;
 
     uint256 public initialSupply = 1000000;
-    uint64 public burnPercentage = 1;   //0.01%
+    uint64 public burnPercentage = 1; //0.01%
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
@@ -29,6 +29,14 @@ contract MigFinance is ERC20, Ownable, Pausable {
         burnPercentage = _burnPercentage;
     }
 
+    function pause() external onlyOwner {
+        _pause();
+    }
+
+    function unpause() external onlyOwner {
+        _unpause();
+    }
+
     /**
      * @dev See {IERC20-transfer}.
      *
@@ -44,7 +52,9 @@ contract MigFinance is ERC20, Ownable, Pausable {
         returns (bool)
     {
         uint256 _amount = _deduct(_msgSender(), amount);
-        return super.transfer(recipient, _amount);
+
+        _transfer(_msgSender(), recipient, _amount);
+        return true;
     }
 
     /**
@@ -66,6 +76,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
         uint256 amount
     ) public override whenNotPaused returns (bool) {
         uint256 _amount = _deduct(sender, amount);
+        decreaseAllowance(recipient, (amount - _amount));
         return super.transferFrom(sender, recipient, _amount);
     }
 
