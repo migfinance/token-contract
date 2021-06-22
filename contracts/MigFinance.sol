@@ -7,9 +7,15 @@ import "@openzeppelin/contracts/security/Pausable.sol";
 
 contract MigFinance is ERC20, Ownable, Pausable {
     uint256 public constant PERCENTAGE_DECIMAL = 10000;
+    uint256 public constant ONE_MONTH = 2678400; //31 * 24 * 60 * 60;
 
+    uint256 public initialBurnRate = 100; //1%;
+    uint256 public afterFirstMonthBurnRate = 50; //0.5%;
     uint256 public initialSupply = 1000000;
-    uint64 public burnPercentage = 1; //0.01%
+
+    uint256 public start;
+
+    event BurnRateUpdate(uint256 burnRate, uint256 step);
 
     /**
      * @dev Sets the values for {name} and {symbol}, initializes {decimals} with
@@ -20,13 +26,24 @@ contract MigFinance is ERC20, Ownable, Pausable {
      * All three of these values are immutable: they can only be set once during
      * construction.
      */
-    constructor(
-        string memory _name,
-        string memory _symbol,
-        uint64 _burnPercentage
-    ) ERC20(_name, _symbol) {
+    constructor(string memory _name, string memory _symbol)
+        ERC20(_name, _symbol)
+    {
         _mint(_msgSender(), initialSupply * 10**(decimals()));
-        burnPercentage = _burnPercentage;
+        start = block.timestamp;
+    }
+
+    function setBurnRate(uint256 _burnRate, uint256 _step) external onlyOwner {
+        require(_burnRate <= 10000, "setBurnRate: INVALID_BURN_RATE");
+        require(_step <= 2, "setBurnRate: INVALID_BURN_STEP");
+
+        if (_step == 1 && block.timestamp < start + ONE_MONTH) {
+            initialBurnRate = _burnRate;
+        } else if (_step == 2) {
+            afterFirstMonthBurnRate = _burnRate;
+        }
+
+        emit BurnRateUpdate(_burnRate, _step);
     }
 
     function pause() external onlyOwner {
@@ -44,6 +61,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
      *
      * - `recipient` cannot be the zero address.
      * - the caller must have a balance of at least `amount`.
+     * overrided hence cannot be external
      */
     function transfer(address recipient, uint256 amount)
         public
@@ -69,6 +87,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
      * - `sender` must have a balance of at least `amount`.
      * - the caller must have allowance for ``sender``'s tokens of at least
      * `amount`.
+     * overrided hence cannot be external
      */
     function transferFrom(
         address sender,
@@ -88,11 +107,17 @@ contract MigFinance is ERC20, Ownable, Pausable {
         return true;
     }
 
+    function getBurnPercentage() public view returns (uint256) {
+        if (block.timestamp < start + ONE_MONTH) {
+            return initialBurnRate;
+        } else return afterFirstMonthBurnRate;
+    }
+
     function _deduct(address sender, uint256 amount)
         internal
         returns (uint256)
     {
-        uint256 toBurn = (amount * burnPercentage) / PERCENTAGE_DECIMAL;
+        uint256 toBurn = (amount * getBurnPercentage()) / PERCENTAGE_DECIMAL;
         _burn(sender, toBurn);
         return (amount - toBurn);
     }
