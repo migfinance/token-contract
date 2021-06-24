@@ -170,7 +170,7 @@ describe("MigFinance", function () {
     expect(await migFinance.allowance(address, addressList[2])).to.equal("0");   //only transfer amount reduced from allowance
   });
 
-  it("should deduct fees in transferFrom with limited balance", async () => { 
+  it("should not transferFrom with limited balance", async () => { 
     const sent = await migFinance.transfer(addressList[1],1000);
     await sent.wait();
     console.log(await migFinance.balanceOf(addressList[1]));

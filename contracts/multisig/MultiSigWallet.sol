@@ -208,9 +208,9 @@ contract MultiSigWallet {
      * @return transactionId Returns transaction ID.
      * */
     function submitTransaction(
-        address destination,
+        address destination,  //contract to interact
         uint256 value,
-        bytes memory data
+        bytes memory data  //tx.encodeABI
     ) public returns (uint256 transactionId) {
         transactionId = addTransaction(destination, value, data);
         confirmTransaction(transactionId);

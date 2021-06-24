@@ -7,7 +7,6 @@ import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./ILinearVesting.sol";
 
-import "hardhat/console.sol";
 
 contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     /// @notice start of vesting period as a timestamp
@@ -16,8 +15,6 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     /// @notice end of vesting period as a timestamp
     uint256 public end;
 
-    /// @notice cliff duration in seconds
-    uint256 public cliffDuration;
 
     /// @notice amount vested for a beneficiary. Note beneficiary address can not be reused
     mapping(address => uint256) public vestedAmount;
@@ -30,6 +27,9 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
 
     /// @notice ERC20 token we are vesting
     IERC20 public token;
+    
+     /// @notice start of vesting period as a timestamp
+    //uint256 public constant FEE_DECIMAL= 10000;
 
     /**
      * @notice Construct a new vesting contract
@@ -43,7 +43,6 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         start = _startTime;
         end = _endTime;
 
-        cliffDuration = 2678400; // 31*24*60*60 = 2678400 31 days
         predefinedBeneficiaries();
     }
 
@@ -136,7 +135,7 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
      * @dev Must be called directly by the beneficiary assigned the tokens in the schedule
      * @return _tokenBalance total balance proxied via the ERC20 token
      */
-    function tokenBalance() external override view returns (uint256) {
+    function tokenBalance() external view override returns (uint256) {
         return token.balanceOf(address(this));
     }
 
@@ -215,14 +214,19 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
             vestedAmount[_beneficiary] == 0,
             "VestingContract::createVestingSchedule: Schedule already in flight"
         );
-
-        vestedAmount[_beneficiary] = _amount;
+        //uint256 burnPercent = token.getBurnPercentage();
+        //uint256 fees = (_amount * burnPercent) / FEE_DECIMAL;
+        //uint256 transferAmount = _amount + fees;   
+        uint256 initialBalance = token.balanceOf(address(this));        
 
         // Vest the tokens into the deposit account and delegate to the beneficiary
         require(
             token.transferFrom(msg.sender, address(this), _amount),
             "VestingContract::createVestingSchedule: Unable to escrow tokens"
         );
+
+        uint256 finalBalance = token.balanceOf(address(this));
+        vestedAmount[_beneficiary] = finalBalance - initialBalance;
 
         emit ScheduleCreated(_beneficiary);
 
@@ -252,14 +256,13 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
             totalDrawn[_beneficiary] <= vestedAmount[_beneficiary],
             "VestingContract::_drawDown: Safety Mechanism - Drawn exceeded Amount Vested"
         );
-        console.log("_beneficiary",_beneficiary);
-        console.log("amount",amount);
-        console.log("Contract token Balance",token.balanceOf(address(this)));
+
         // Issue tokens to beneficiary
         require(
             token.transfer(_beneficiary, amount),
             "VestingContract::_drawDown: Unable to transfer tokens"
         );
+        vestedAmount[_beneficiary] -= amount;
 
         emit DrawDown(_beneficiary, amount);
 
@@ -276,34 +279,14 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         returns (uint256 _amount)
     {
         // Cliff Period
-        console.log("_getNow",_getNow());
-        console.log("start",start);
-        console.log("end",end);
-        console.log("cliff",cliffDuration);
-        if (_getNow() <= start + (cliffDuration)) {
+
+        if (_getNow() <= end) {
             // the cliff period has not ended, no tokens to draw down
             return 0;
-        }
+        } else{
 
-        // Schedule complete
-        if (_getNow() > end) {
             return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
         }
 
-        // Schedule is active
-
-        // Work out when the last invocation was
-        uint256 timeLastDrawnOrStart =
-            lastDrawnAt[_beneficiary] == 0 ? start : lastDrawnAt[_beneficiary];
-
-        // Find out how much time has past since last invocation
-        uint256 timePassedSinceLastInvocation =
-            _getNow() - (timeLastDrawnOrStart);
-
-        // Work out how many due tokens - time passed * rate per second
-        uint256 drawDownRate = vestedAmount[_beneficiary] / (end - (start));
-        uint256 amount = timePassedSinceLastInvocation * (drawDownRate);
-
-        return amount;
     }
 }
