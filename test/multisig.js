@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { expectRevert } = require('@openzeppelin/test-helpers');
 
 const { abi } = require("../artifacts/contracts/MigFinance.sol/MigFinance.json")
 
@@ -7,9 +8,8 @@ describe("MultiSig", async () => {
   let multiSigWallet, migFinance;
   let owner1;
   let owner2;
-
   beforeEach(async () => {
-    [owner1, owner2, owner3] = await ethers.getSigners();
+    [owner1, owner2, nonOwner1] = await ethers.getSigners();
 
     //Deploying Contract MigFinance
     const MigFinance = await ethers.getContractFactory("MigFinance");
@@ -44,12 +44,11 @@ describe("MultiSig", async () => {
     //create transaction data
     const data = getTxData();
 
-    const created = await multiSigWallet.submitTransaction(migFinance.address, 0, data);
-    created.wait();
+    //submit tx
+    await multiSigWallet.submitTransaction(migFinance.address, 0, data);
+
 
     expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);
-    expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
-
     expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
 
     expect(await migFinance.getBurnPercentage()).to.equal("100");
@@ -101,8 +100,75 @@ describe("MultiSig", async () => {
     expect(await migFinance.getBurnPercentage()).to.equal("200");
   });
 
-  //it should revert if non owner address tries to submit/confirm/execute (test all 3 as different cases)
+  it("should not submit, if sender is not MultiSigWallet Owner", async () => {
+    //set owner
+    await migFinance.transferOwnership(multiSigWallet.address);
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
+  
+    //create transaction data
+    const data = getTxData();
+
+    // tx reverts without a reason if sender is not owner
+    expectRevert.unspecified(
+      multiSigWallet.connect(nonOwner1).submitTransaction(migFinance.address, 0, data)
+    );
+    expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(0);    
+    expect(await migFinance.getBurnPercentage()).to.equal("100"); 
+  
+  });
+
+  it("should not confirm, if sender is not MultiSigWallet Owner", async () => {
+    //set owner
+    await migFinance.transferOwnership(multiSigWallet.address);
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
+  
+    //create transaction data
+    const data = getTxData();
+
+    //submit tx by owner
+    await multiSigWallet.connect(owner1).submitTransaction(migFinance.address, 0, data);
+
+    expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);
+    expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
+
+    // tx reverts without a reason if sender is not owner
+    expectRevert.unspecified(
+      multiSigWallet.connect(nonOwner1).confirmTransaction(0)
+    );
+    const confirmations = await multiSigWallet.getConfirmations(0);
+    expect(confirmations.length).to.equal(1);
+    expect(await migFinance.getBurnPercentage()).to.equal("100"); 
+  
+  });
+
+  it("should not execute, if sender is not MultiSigWallet Owner", async () => {
+    //set owner
+    await migFinance.transferOwnership(multiSigWallet.address);
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
+  
+    //create transaction data
+    const data = getTxData();
+
+    //submit tx by owner
+    await multiSigWallet.connect(owner1).submitTransaction(migFinance.address, 0, data);
+
+    expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);
+    expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
+
+    //confirm 2nd owner
+    await multiSigWallet.connect(owner2).confirmTransaction(0);
+
+    // tx reverts without a reason if sender is not owner
+    expectRevert.unspecified(
+      multiSigWallet.connect(nonOwner1).executeTransaction(0)
+    );
+    const confirmations = await multiSigWallet.getConfirmations(0);
+    expect(confirmations.length).to.equal(2);
+    expect(await migFinance.getBurnPercentage()).to.equal("200"); 
+  
+  });
 });
+
 
 const getTxData = () => {
   const iface = new ethers.utils.Interface(abi)
