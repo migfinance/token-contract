@@ -3,7 +3,7 @@ const { ethers } = require("hardhat");
 
 const { abi } = require("../artifacts/contracts/MigFinance.sol/MigFinance.json")
 
-describe("MultiSig", async function () {
+describe("MultiSig", async () => {
   let multiSigWallet, migFinance;
   let owner1;
   let owner2;
@@ -23,11 +23,8 @@ describe("MultiSig", async function () {
 
   it("should submit,confirm and not execute tx without setting owner", async () => {
     //create transaction data
-    let iface = new ethers.utils.Interface(abi)
-    let data = iface.encodeFunctionData("setBurnRate", [
-      "200",
-      "1"
-    ])
+    const data = getTxData();
+
     await multiSigWallet.connect(owner1).submitTransaction(migFinance.address, 0, data);
 
     expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);
@@ -40,24 +37,20 @@ describe("MultiSig", async function () {
   });
 
   it("should submit, not confirm and not execute tx without 2nd confirmation", async () => {
-    //create beneficiary
-    let iface = new ethers.utils.Interface(abi)
-    let data = iface.encodeFunctionData("setBurnRate", [
-      "200",
-      "1"
-    ])
+    //set owner
+    await migFinance.transferOwnership(multiSigWallet.address);
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
+
+    //create transaction data
+    const data = getTxData();
+
     const created = await multiSigWallet.submitTransaction(migFinance.address, 0, data);
     created.wait();
 
-    let tx = await multiSigWallet.transactions(0);
     expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);
     expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
-    // console.log(tx,"tx");
 
-    // const confirmed = await multiSigWallet.connect(signers[1]).confirmTransaction(0);
-    // confirmed.wait();
     expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
-    tx = await multiSigWallet.transactions(0);
 
     expect(await migFinance.getBurnPercentage()).to.equal("100");
 
@@ -65,12 +58,13 @@ describe("MultiSig", async function () {
   });
 
   it("should submit,not confirm and not execute tx if 1st owner revokes confirmation", async () => {
-    //create beneficiary
-    let iface = new ethers.utils.Interface(abi)
-    let data = iface.encodeFunctionData("setBurnRate", [
-      "200",
-      "1"
-    ])
+    //set owner
+    await migFinance.transferOwnership(multiSigWallet.address);
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
+
+    //create transaction data
+    const data = getTxData();
+
     await multiSigWallet.submitTransaction(migFinance.address, 0, data);
 
     await multiSigWallet.transactions(0);
@@ -79,7 +73,7 @@ describe("MultiSig", async function () {
 
     //revoke 1st confirmation
     await multiSigWallet.revokeConfirmation(0);
-    let confirmations = await multiSigWallet.getConfirmations(0);
+    const confirmations = await multiSigWallet.getConfirmations(0);
     expect(confirmations.length).to.equal(0);
 
     //2nd owner confirm
@@ -91,15 +85,10 @@ describe("MultiSig", async function () {
   it("should submit,confirm and execute tx", async () => {
     //set owner
     await migFinance.transferOwnership(multiSigWallet.address);
-    //use expect here:
-    // console.log("new owner", await migFinance.owner());
+    expect(await migFinance.owner()).to.equal(multiSigWallet.address);
 
-    //create beneficiary
-    let iface = new ethers.utils.Interface(abi)
-    let data = iface.encodeFunctionData("setBurnRate", [
-      "200",
-      "1"
-    ])
+    //create transaction data
+    const data = getTxData();
 
     await multiSigWallet.submitTransaction(migFinance.address, 0, data);
 
@@ -114,3 +103,12 @@ describe("MultiSig", async function () {
 
   //it should revert if non owner address tries to submit/confirm/execute (test all 3 as different cases)
 });
+
+const getTxData = () => {
+  const iface = new ethers.utils.Interface(abi)
+  const data = iface.encodeFunctionData("setBurnRate", [
+    "200",
+    "1"
+  ]);
+  return data;
+}

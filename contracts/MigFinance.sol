@@ -32,10 +32,20 @@ contract MigFinance is ERC20, Ownable, Pausable {
         _mint(_msgSender(), initialSupply * 10**(decimals()));
         start = block.timestamp;
     }
-
+    
+    /**
+     * @dev Sets burn rate of token.
+     * @param _burnRate new burn rate to set
+     * @param _step specifies time period to set burn rate. Can be 1 or 2
+     *
+     * Requirements:
+     *
+     * - `_burnRate` should be less than 10000.
+     * - `_step` should be less than 2.
+     */
     function setBurnRate(uint256 _burnRate, uint256 _step) external onlyOwner {
-        require(_burnRate <= 10000, "setBurnRate: INVALID_BURN_RATE");
-        require(_step <= 2, "setBurnRate: INVALID_BURN_STEP");
+        require(_burnRate <= 10000, "MigFinance:setBurnRate:: INVALID_BURN_RATE");
+        require(_step <= 2, "MigFinance:setBurnRate:: INVALID_BURN_STEP");
 
         if (_step == 1 && block.timestamp < start + ONE_MONTH) {
             initialBurnRate = _burnRate;
@@ -45,11 +55,24 @@ contract MigFinance is ERC20, Ownable, Pausable {
 
         emit BurnRateUpdate(_burnRate, _step);
     }
-
+    /**
+     * @dev pauses contract.
+     *
+     * Requirements:
+     *
+     * - `onlyOwner` should be true.
+     */
     function pause() external onlyOwner {
         _pause();
     }
 
+    /**
+     * @dev unpauses contract.
+     *
+     * Requirements:
+     *
+     * - `onlyOwner` should be true.
+     */
     function unpause() external onlyOwner {
         _unpause();
     }
@@ -100,19 +123,25 @@ contract MigFinance is ERC20, Ownable, Pausable {
         uint256 currentAllowance = allowance(sender, _msgSender());
         require(
             currentAllowance >= amount,
-            "ERC20: transfer amount exceeds allowance"
+            "MigFinance:transferFrom:: TRANSFER AMOUNT EXCEEDS ALLOWANCE"
         );
         _approve(sender, _msgSender(), currentAllowance - amount);
 
         return true;
     }
-
+    /**
+     * @dev Returns burn percentage.
+     */
     function getBurnPercentage() public view returns (uint256) {
         if (block.timestamp < start + ONE_MONTH) {
             return initialBurnRate;
         } else return afterFirstMonthBurnRate;
     }
-
+    /**
+     * @dev Returns amount to transfer after burning fees.
+     * @param sender address of token sender
+     * @param amount amount of tokens to transfer
+     */
     function _deduct(address sender, uint256 amount)
         internal
         returns (uint256)

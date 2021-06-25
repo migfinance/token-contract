@@ -3,7 +3,7 @@ const hre = require("hardhat");
 const fs = require('fs');
 const {multiSigWalletConfig} = require("../config/config")
 
-async function main() {
+const main = async () => {
   const MultiSigWallet = await hre.ethers.getContractFactory("MultiSigWallet");
   const multiSigWallet = await MultiSigWallet.deploy(multiSigWalletConfig.owners,multiSigWalletConfig.required);
 

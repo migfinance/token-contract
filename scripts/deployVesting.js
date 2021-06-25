@@ -3,7 +3,7 @@ const hre = require("hardhat");
 const fs = require('fs');
 const { vestingConfig } = require("../config/config")
 
-async function main() {
+const main = async () => {
   const LinearVesting = await hre.ethers.getContractFactory("LinearVesting");
   const linearVesting = await LinearVesting.deploy(vestingConfig.token,vestingConfig.startTime,vestingConfig.endTime);
 
