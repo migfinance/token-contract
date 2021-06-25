@@ -1,5 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
+const { expectRevert } = require('@openzeppelin/test-helpers');
 
 describe("LinearVesting", () => {
   let linearVesting, migFinance;
@@ -51,8 +52,11 @@ describe("LinearVesting", () => {
     expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal("69300000000");
 
     //draw call
-    await linearVesting.drawDown();
-    expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal("70000000000");    
+    expectRevert(
+      linearVesting.drawDown(),
+      'VestingContract::_drawDown: No allowance left to withdraw',
+    );
+    expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal("69300000000");    
     expect(await migFinance.balanceOf(contractSigner.address)).to.equal("999999999999930000000000");
 
   });
