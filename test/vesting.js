@@ -1,6 +1,6 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { vestingConfig } = require("../../config/config")
+const { vestingConfig } = require("../config/config")
 
 describe("LinearVesting", function () {
   let linearVesting, migFinance;
