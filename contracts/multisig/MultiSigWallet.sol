@@ -47,42 +47,63 @@ contract MultiSigWallet {
      *  Modifiers
      */
     modifier onlyWallet() {
-        require(msg.sender == address(this));
+        require(
+            msg.sender == address(this),
+            "MultiSigWallet::onlyWallet: ERR_ONLY_WALLET"
+        );
         _;
     }
 
     modifier ownerDoesNotExist(address owner) {
-        require(!isOwner[owner]);
+        require(
+            !isOwner[owner],
+            "MultiSigWallet::ownerDoesNotExist: ERR_ONWER_DOESNT_EXIST"
+        );
         _;
     }
 
     modifier ownerExists(address owner) {
-        require(isOwner[owner]);
+        require(isOwner[owner], "MultiSigWallet::ownerExists: ERR_ONWER_EXIST");
         _;
     }
 
     modifier transactionExists(uint256 transactionId) {
-        require(transactions[transactionId].destination != address(0));
+        require(
+            transactions[transactionId].destination != address(0),
+            "MultiSigWallet::transactionExists: ERR_INVALID_TARGET"
+        );
         _;
     }
 
     modifier confirmed(uint256 transactionId, address owner) {
-        require(confirmations[transactionId][owner]);
+        require(
+            confirmations[transactionId][owner],
+            "MultiSigWallet::confirmed: ERR_NOT_CONFIRMED"
+        );
         _;
     }
 
     modifier notConfirmed(uint256 transactionId, address owner) {
-        require(!confirmations[transactionId][owner]);
+        require(
+            !confirmations[transactionId][owner],
+            "MultiSigWallet::notConfirmed: ERR_CONFIRMED"
+        );
         _;
     }
 
     modifier notExecuted(uint256 transactionId) {
-        require(!transactions[transactionId].executed);
+        require(
+            !transactions[transactionId].executed,
+            "MultiSigWallet::notExecuted: ERR_EXECUTED"
+        );
         _;
     }
 
     modifier notNull(address _address) {
-        require(_address != address(0));
+        require(
+            _address != address(0),
+            "MultiSigWallet::notNull: ERR_ZERO_ADDRESS"
+        );
         _;
     }
 
@@ -91,7 +112,8 @@ contract MultiSigWallet {
             ownerCount <= MAX_OWNER_COUNT &&
                 _required <= ownerCount &&
                 _required != 0 &&
-                ownerCount != 0
+                ownerCount != 0,
+            "MultiSigWallet::validRequirement: ERR_INVALID_REQUIREMENT"
         );
         _;
     }
@@ -116,7 +138,10 @@ contract MultiSigWallet {
         validRequirement(_owners.length, _required)
     {
         for (uint256 i = 0; i < _owners.length; i++) {
-            require(!isOwner[_owners[i]] && _owners[i] != address(0));
+            require(
+                !isOwner[_owners[i]] && _owners[i] != address(0),
+                "MultiSigWallet::constructor: ERR_INVALID_OWNERS"
+            );
             isOwner[_owners[i]] = true;
         }
         owners = _owners;
@@ -208,9 +233,9 @@ contract MultiSigWallet {
      * @return transactionId Returns transaction ID.
      * */
     function submitTransaction(
-        address destination,  //contract to interact
+        address destination, //contract to interact
         uint256 value,
-        bytes memory data  //tx.encodeABI
+        bytes memory data //tx.encodeABI
     ) public returns (uint256 transactionId) {
         transactionId = addTransaction(destination, value, data);
         confirmTransaction(transactionId);
