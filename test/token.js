@@ -1,12 +1,10 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-const { expectRevert } = require('@openzeppelin/test-helpers');
-
 describe("MigFinance", () => {
   let migFinance;
   let signers;
-  let  contractSigner;
+  let contractSigner;
 
   beforeEach(async () => {
     signers = await ethers.getSigners();
@@ -87,10 +85,9 @@ describe("MigFinance", () => {
     const amountToTransfer = 1000;
 
     //Checking the transfer function
-    expectRevert(
-      migFinance.transfer(signers[1].address, amountToTransfer),
-      'Pausable: paused'
-    );
+    await expect(migFinance.transfer(signers[1].address, amountToTransfer))
+      .to.be.revertedWith('Pausable: paused');
+
   });
 
   it("should not transfer from when paused", async () => {
@@ -105,10 +102,9 @@ describe("MigFinance", () => {
 
     //checking transferFrom
     const amountToTransferFrom = 1000;
-    expectRevert(
-      migFinance.connect(signers[2]).transferFrom(contractSigner.address, signers[1].address, amountToTransferFrom),
-      'Pausable: paused'
-    );
+    await expect(migFinance.connect(signers[2]).transferFrom(contractSigner.address, signers[1].address, amountToTransferFrom))
+      .to.be.revertedWith('Pausable: paused');
+
   });
 
   it("should transfer according to afterFirstMonthBurnRate", async () => {
@@ -166,10 +162,9 @@ describe("MigFinance", () => {
 
     //checking transferFrom
     const amountToTransferFrom = 1000;
-     expectRevert(
-      migFinance.connect(signers[2]).transferFrom(signers[1].address, signers[3].address, amountToTransferFrom),
-      'ERC20: transfer amount exceeds balance',
-    );
+    await expect(migFinance.connect(signers[2]).transferFrom(signers[1].address, signers[3].address, amountToTransferFrom))
+      .to.be.revertedWith('ERC20: transfer amount exceeds balance');
+
     expect(await migFinance.balanceOf(signers[3].address)).to.equal("0");
     expect(await migFinance.totalSupply()).to.equal("999999999999999999999990");
 

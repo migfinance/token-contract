@@ -1,6 +1,5 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
-const { expectRevert } = require('@openzeppelin/test-helpers');
 
 const { abi } = require("../artifacts/contracts/MigFinance.sol/MigFinance.json")
 
@@ -104,24 +103,24 @@ describe("MultiSig", async () => {
     //set owner
     await migFinance.transferOwnership(multiSigWallet.address);
     expect(await migFinance.owner()).to.equal(multiSigWallet.address);
-  
+
     //create transaction data
     const data = getTxData();
 
     // tx reverts without a reason if sender is not owner
-    expectRevert.unspecified(
+    await expect(
       multiSigWallet.connect(nonOwner1).submitTransaction(migFinance.address, 0, data)
-    );
-    expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(0);    
-    expect(await migFinance.getBurnPercentage()).to.equal("100"); 
-  
+    ).to.be.revertedWith('');
+    expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(0);
+    expect(await migFinance.getBurnPercentage()).to.equal("100");
+
   });
 
   it("should not confirm, if sender is not MultiSigWallet Owner", async () => {
     //set owner
     await migFinance.transferOwnership(multiSigWallet.address);
     expect(await migFinance.owner()).to.equal(multiSigWallet.address);
-  
+
     //create transaction data
     const data = getTxData();
 
@@ -132,20 +131,20 @@ describe("MultiSig", async () => {
     expect(await multiSigWallet.isConfirmed(0)).to.equal(false);
 
     // tx reverts without a reason if sender is not owner
-    expectRevert.unspecified(
+    await expect(
       multiSigWallet.connect(nonOwner1).confirmTransaction(0)
-    );
+    ).to.be.revertedWith('');
     const confirmations = await multiSigWallet.getConfirmations(0);
     expect(confirmations.length).to.equal(1);
-    expect(await migFinance.getBurnPercentage()).to.equal("100"); 
-  
+    expect(await migFinance.getBurnPercentage()).to.equal("100");
+
   });
 
   it("should not execute, if sender is not MultiSigWallet Owner", async () => {
     //set owner
     await migFinance.transferOwnership(multiSigWallet.address);
     expect(await migFinance.owner()).to.equal(multiSigWallet.address);
-  
+
     //create transaction data
     const data = getTxData();
 
@@ -159,13 +158,13 @@ describe("MultiSig", async () => {
     await multiSigWallet.connect(owner2).confirmTransaction(0);
 
     // tx reverts without a reason if sender is not owner
-    expectRevert.unspecified(
+    await expect(
       multiSigWallet.connect(nonOwner1).executeTransaction(0)
-    );
+    ).to.be.revertedWith('');
     const confirmations = await multiSigWallet.getConfirmations(0);
     expect(confirmations.length).to.equal(2);
-    expect(await migFinance.getBurnPercentage()).to.equal("200"); 
-  
+    expect(await migFinance.getBurnPercentage()).to.equal("200");
+
   });
 });
 
