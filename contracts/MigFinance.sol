@@ -32,7 +32,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
         _mint(_msgSender(), initialSupply * 10**(decimals()));
         start = block.timestamp;
     }
-    
+
     /**
      * @dev Sets burn rate of token.
      * @param _burnRate new burn rate to set
@@ -44,7 +44,10 @@ contract MigFinance is ERC20, Ownable, Pausable {
      * - `_step` should be less than 2.
      */
     function setBurnRate(uint256 _burnRate, uint256 _step) external onlyOwner {
-        require(_burnRate <= 10000, "MigFinance:setBurnRate:: INVALID_BURN_RATE");
+        require(
+            _burnRate <= 10000,
+            "MigFinance:setBurnRate:: INVALID_BURN_RATE"
+        );
         require(_step <= 2, "MigFinance:setBurnRate:: INVALID_BURN_STEP");
 
         if (_step == 1 && block.timestamp < start + ONE_MONTH) {
@@ -55,6 +58,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
 
         emit BurnRateUpdate(_burnRate, _step);
     }
+
     /**
      * @dev pauses contract.
      *
@@ -129,6 +133,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
 
         return true;
     }
+
     /**
      * @dev Returns burn percentage.
      */
@@ -137,6 +142,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
             return initialBurnRate;
         } else return afterFirstMonthBurnRate;
     }
+
     /**
      * @dev Returns amount to transfer after burning fees.
      * @param sender address of token sender
