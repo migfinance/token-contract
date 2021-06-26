@@ -1,16 +1,16 @@
 
 const hre = require("hardhat");
 const fs = require('fs');
+const { migFinanceConfig } = require("../config/config")
 
-
-async function main() {
+const main = async () => {
   const MigFinance = await hre.ethers.getContractFactory("MigFinance");
-  const migFinance = await MigFinance.deploy("Mig Finance token", "MIGFINANCE", 10);
+  const migFinance = await MigFinance.deploy(migFinanceConfig.name, migFinanceConfig.symbol);
 
   await migFinance.deployed();
 
   const data = { address: migFinance.address };
-  fs.writeFileSync(__dirname + '/../addresses/MigFinance', JSON.stringify(data));
+  fs.writeFileSync(__dirname + '/../config/addresses/MigFinance', JSON.stringify(data));
   console.log("MigFinance deployed at:", migFinance.address);
 }
 

@@ -4,8 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "npx hardhat test test/",
-    "deploy": "npx hardhat run scripts/VNTWTokenDeploScript.js"
+    "testToken": "npx hardhat test test/token.js",
+    "testVesting": "npx hardhat test test/vesting.js",
+    "testMultiSigWallet": "npx hardhat test test/multisig.js",
+    "deployMigFinance": "npx hardhat run scripts/deployMigFinance.js",
+    "deployMultiSigWallet": "npx hardhat run scripts/deployMultiSigWallet.js",
+    "deployVesting": "npx hardhat run scripts/deployVesting.js"
   },
   "keywords": [],
   "author": "",
@@ -13,6 +17,7 @@
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.2",
     "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "@openzeppelin/test-helpers": "^0.5.11",
     "chai": "^4.3.4",
     "ethereum-waffle": "^3.4.0",
     "ethers": "^5.3.1",
