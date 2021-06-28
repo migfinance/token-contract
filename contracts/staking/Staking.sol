@@ -28,6 +28,7 @@ contract Staking is Context, Ownable, ReentrancyGuard {
             id < userInfo[msg.sender].length,
             "Staking:checkReward:: ERR_INVALID_ID"
         );
+        _;
     }
 
     constructor(address _stakeToken, address _rewardToken) {
@@ -60,7 +61,7 @@ contract Staking is Context, Ownable, ReentrancyGuard {
     }
 
     function checkReward(uint256 id) public view returns (uint256 reward) {
-        if (id < userInfo[msg.sender].length) return 0;
+        if (id > userInfo[msg.sender].length) return 0;
 
         DepositInfo storage depositInfo = userInfo[msg.sender][id];
 
