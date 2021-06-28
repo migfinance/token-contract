@@ -96,9 +96,10 @@ contract MigFinance is ERC20, Ownable, Pausable {
         whenNotPaused
         returns (bool)
     {
-        uint256 _amount = _deduct(_msgSender(), amount);
+        uint256 toBurn = _toBurn(amount);
 
-        _transfer(_msgSender(), recipient, _amount);
+        _transfer(_msgSender(), recipient, amount - toBurn);
+        _burn(_msgSender(), toBurn);
         return true;
     }
 
@@ -121,8 +122,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
         address recipient,
         uint256 amount
     ) public override whenNotPaused returns (bool) {
-        uint256 _amount = _deduct(sender, amount);
-        _transfer(sender, recipient, _amount);
+        uint256 toBurn = _toBurn(amount);
 
         uint256 currentAllowance = allowance(sender, _msgSender());
         require(
@@ -131,6 +131,8 @@ contract MigFinance is ERC20, Ownable, Pausable {
         );
         _approve(sender, _msgSender(), currentAllowance - amount);
 
+        _transfer(sender, recipient, amount - toBurn);
+        _burn(sender, toBurn);
         return true;
     }
 
@@ -145,15 +147,9 @@ contract MigFinance is ERC20, Ownable, Pausable {
 
     /**
      * @dev Returns amount to transfer after burning fees.
-     * @param sender address of token sender
      * @param amount amount of tokens to transfer
      */
-    function _deduct(address sender, uint256 amount)
-        internal
-        returns (uint256)
-    {
-        uint256 toBurn = (amount * getBurnPercentage()) / PERCENTAGE_DECIMAL;
-        _burn(sender, toBurn);
-        return (amount - toBurn);
+    function _toBurn(uint256 amount) internal view returns (uint256 toBurn) {
+        toBurn = (amount * getBurnPercentage()) / PERCENTAGE_DECIMAL;
     }
 }

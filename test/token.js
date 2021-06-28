@@ -163,7 +163,7 @@ describe("MigFinance", () => {
     //checking transferFrom
     const amountToTransferFrom = 1000;
     await expect(migFinance.connect(signers[2]).transferFrom(signers[1].address, signers[3].address, amountToTransferFrom))
-      .to.be.revertedWith('ERC20: transfer amount exceeds balance');
+      .to.be.revertedWith('ERC20: burn amount exceeds balance');
 
     expect(await migFinance.balanceOf(signers[3].address)).to.equal("0");
     expect(await migFinance.totalSupply()).to.equal("999999999999999999999990");
