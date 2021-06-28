@@ -1,6 +1,6 @@
 const { expect, use } = require("chai");
 const { solidity } = require("ethereum-waffle");
-const { ethers, waffle } = require("hardhat");
+const { ethers } = require("hardhat");
 
 const { BigNumber } = ethers;
 
@@ -18,9 +18,11 @@ describe("LinearVesting", () => {
   const STAKING_TOKEN_NAME = "Staking Token";
   const STAKING_TOKEN_SYMBOL = "STAKETOKEN";
 
+  const REWARD_TOKEN_AMOUNT = BigNumber.from(10000).mul(DECIMALS);
+
   beforeEach(async () => {
     const MigFinanceRewardToken = await ethers.getContractFactory("MigFinance");
-    const DemoStakeToken = await ethers.getContractFactory("DemoERC20");
+    const DemoStakeToken = await ethers.getContractFactory("MockToken");
     const Staking = await ethers.getContractFactory("Staking");
 
     //Deploying Contract MigFinance
@@ -30,16 +32,18 @@ describe("LinearVesting", () => {
     //Deploying Demo Staking Token
     demoStakeToken = await DemoStakeToken.deploy(STAKING_TOKEN_NAME, STAKING_TOKEN_SYMBOL);
     await demoStakeToken.deployed();
-    
+
     contractSigner = await migFinanceReward.signer;
 
     //Deploying Contract staking
-
     staking = await Staking.deploy(
       demoStakeToken.address,
-      migFinanceReward.address      
+      migFinanceReward.address
     );
     await staking.deployed();
+
+    //add reward tokens
+    await migFinanceReward.transfer(staking.address, REWARD_TOKEN_AMOUNT);
 
   })
 
@@ -53,7 +57,7 @@ describe("LinearVesting", () => {
 
     await migFinanceReward.approve(staking.address, amountToApprove);
     expect(await migFinanceReward.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
-    
+
     await demoStakeToken.approve(staking.address, amountToApprove);
     expect(await demoStakeToken.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
 
@@ -72,7 +76,7 @@ describe("LinearVesting", () => {
 
     await migFinanceReward.approve(staking.address, amountToApprove);
     expect(await migFinanceReward.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
-    
+
     await demoStakeToken.approve(staking.address, amountToApprove);
     expect(await demoStakeToken.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
 
@@ -86,13 +90,12 @@ describe("LinearVesting", () => {
     expect(await demoStakeToken.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(stakeAmount));
 
     //increase time
-    await ethers.provider.send("evm_increaseTime", [9469440]);
+    await ethers.provider.send("evm_increaseTime", [94694400]);
     await ethers.provider.send("evm_mine");
     // const reward = await staking.checkReward("0")
 
     await staking.claim("0");
     expect(await staking.totalStakedAmount()).to.equal("0");
-
   });
 });
 

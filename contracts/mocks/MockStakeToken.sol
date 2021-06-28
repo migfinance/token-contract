@@ -4,8 +4,8 @@ pragma solidity 0.8.5;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract DemoERC20 is ERC20 {
-    constructor (string memory name, string memory symbol) ERC20(name, symbol){
+contract MockToken is ERC20 {
+    constructor(string memory name, string memory symbol) ERC20(name, symbol) {
         _mint(msg.sender, 1000000 * 10**18);
     }
 }
