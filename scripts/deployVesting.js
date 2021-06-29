@@ -10,7 +10,7 @@ const main = async () => {
   await linearVesting.deployed();
 
   const data = { address: linearVesting.address };
-  fs.writeFileSync(__dirname + '/../config/addresses/linearVesting', JSON.stringify(data));
+  fs.writeFileSync(__dirname + '/../config/addresses/linearVesting.json', JSON.stringify(data));
   console.log("linearVesting deployed at:", linearVesting.address);
 }
 

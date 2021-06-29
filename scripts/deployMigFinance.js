@@ -10,7 +10,7 @@ const main = async () => {
   await migFinance.deployed();
 
   const data = { address: migFinance.address };
-  fs.writeFileSync(__dirname + '/../config/addresses/MigFinance', JSON.stringify(data));
+  fs.writeFileSync(__dirname + '/../config/addresses/MigFinance.json', JSON.stringify(data));
   console.log("MigFinance deployed at:", migFinance.address);
 }
 

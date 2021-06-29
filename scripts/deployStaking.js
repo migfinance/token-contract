@@ -10,7 +10,7 @@ const main = async () => {
   await staking.deployed();
 
   const data = { address: staking.address };
-  fs.writeFileSync(__dirname + '/../config/addresses/staking', JSON.stringify(data));
+  fs.writeFileSync(__dirname + '/../config/addresses/staking.json', JSON.stringify(data));
   console.log("staking deployed at:", staking.address);
 }
 

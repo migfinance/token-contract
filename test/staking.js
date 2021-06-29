@@ -97,5 +97,38 @@ describe("LinearVesting", () => {
     await staking.claim("0");
     expect(await staking.totalStakedAmount()).to.equal("0");
   });
+
+  it("should claim tokens", async () => {
+    //approve tokens
+    const amountToApprove = BigNumber.from(1000).mul(DECIMALS);
+
+    await migFinanceReward.approve(staking.address, amountToApprove);
+    expect(await migFinanceReward.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
+
+    await demoStakeToken.approve(staking.address, amountToApprove);
+    expect(await demoStakeToken.allowance(contractSigner.address, staking.address)).to.equal(amountToApprove);
+
+    //stake
+    const stakeAmount = amountToApprove;
+    await staking.stake(stakeAmount);
+
+    //check
+    expect(await staking.depositCount()).to.equal("1");
+    expect(await staking.totalStakedAmount()).to.equal(stakeAmount.toString());
+    expect(await demoStakeToken.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(stakeAmount));
+
+    //increase time
+    await ethers.provider.send("evm_increaseTime", [94694400]);
+    await ethers.provider.send("evm_mine");
+    const reward = await staking.checkReward("0")
+    console.log(reward,"rewarddd")
+    await staking.claim("0");
+    expect(await staking.totalStakedAmount()).to.equal("0");
+    expect(await demoStakeToken.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY);
+    expect(await migFinanceReward.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(stakeAmount));
+
+  });
+
+
 });
 

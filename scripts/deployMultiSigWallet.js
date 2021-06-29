@@ -10,7 +10,7 @@ const main = async () => {
   await multiSigWallet.deployed();
 
   const data = { address: multiSigWallet.address };
-  fs.writeFileSync(__dirname + '/../config/addresses/multiSigWallet', JSON.stringify(data));
+  fs.writeFileSync(__dirname + '/../config/addresses/multiSigWallet.json', JSON.stringify(data));
   console.log("multiSigWallet deployed at:", multiSigWallet.address);
 }
 

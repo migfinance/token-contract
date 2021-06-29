@@ -10,7 +10,9 @@
     "testStaking": "npx hardhat test test/staking.js",
     "deployMigFinance": "npx hardhat run scripts/deployMigFinance.js",
     "deployMultiSigWallet": "npx hardhat run scripts/deployMultiSigWallet.js",
-    "deployVesting": "npx hardhat run scripts/deployVesting.js"
+    "deployVesting": "npx hardhat run scripts/deployVesting.js",
+    "deployStaking": "npx hardhat run scripts/deployStaking.js",
+    "deployDemoStakeToken": "npx hardhat run scripts/deployDemoStakeToken.js"
   },
   "keywords": [],
   "author": "",
