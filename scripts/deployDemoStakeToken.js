@@ -4,7 +4,7 @@ const fs = require('fs');
 const { mockTokenConfig } = require("../config/config")
 
 const main = async () => {
-  const MockToken = await hre.ethers.getContractFactory("MockToken");
+  const MockToken = await hre.ethers.getContractFactory("MockStakeToken");
   const mockToken = await MockToken.deploy(mockTokenConfig.name, mockTokenConfig.symbol);
 
   await mockToken.deployed();

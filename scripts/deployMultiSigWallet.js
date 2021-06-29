@@ -4,8 +4,9 @@ const fs = require('fs');
 const { multiSigWalletConfig } = require("../config/config")
 
 const main = async () => {
+  [owner1, owner2] = await ethers.getSigners();
   const MultiSigWallet = await hre.ethers.getContractFactory("MultiSigWallet");
-  const multiSigWallet = await MultiSigWallet.deploy(multiSigWalletConfig.owners, multiSigWalletConfig.required);
+  const multiSigWallet = await MultiSigWallet.deploy([owner1.address,owner2.address], multiSigWalletConfig.required);
 
   await multiSigWallet.deployed();
 
