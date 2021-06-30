@@ -28,10 +28,13 @@ const mockTokenConfig = {
   symbol: "MOCKTOKEN",
 };
 
+const waitBeforeVerification = 120000;
+
 module.exports = {
   multiSigWalletConfig,
   vestingConfig,
   migFinanceConfig,
   stakingConfig,
   mockTokenConfig,
+  waitBeforeVerification
 };
