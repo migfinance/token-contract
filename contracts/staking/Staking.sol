@@ -66,9 +66,12 @@ contract Staking is Context, Ownable, ReentrancyGuard {
         DepositInfo storage depositInfo = userInfo[msg.sender][id];
 
         //reward = (currentTime/totalTime) * totalAmountStaked - amountWithdrawn
-        uint256 canClaim = (depositInfo.amount *
-            (block.timestamp - depositInfo.startTime)) / STAKING_PERIOD;
+        uint256 timePassed = block.timestamp - depositInfo.startTime >
+            STAKING_PERIOD
+            ? STAKING_PERIOD
+            : block.timestamp - depositInfo.startTime;
 
+        uint256 canClaim = (depositInfo.amount * timePassed) / STAKING_PERIOD;
         reward = canClaim - depositInfo.amountWithdrawn;
     }
 
