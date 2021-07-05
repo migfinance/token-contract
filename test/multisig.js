@@ -1,7 +1,7 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-const { abi } = require("../artifacts/contracts/MigFinance.sol/MigFinance.json")
+const { abi } = require("../artifacts/contracts/MigFinance.sol/MigFinance.json");
 
 describe("MultiSig", async () => {
   let multiSigWallet, migFinance;
@@ -23,7 +23,6 @@ describe("MultiSig", async () => {
   it("should submit,confirm and not execute tx without setting owner", async () => {
     //create transaction data
     const data = getTxData();
-
     await multiSigWallet.connect(owner1).submitTransaction(migFinance.address, 0, data);
 
     expect(await multiSigWallet.getTransactionCount(true, false)).to.equal(1);

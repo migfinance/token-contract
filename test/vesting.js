@@ -16,7 +16,6 @@ describe("LinearVesting", () => {
   const TOKEN_SYMBOL = "MIGFINANCE";
   const DECIMALS = BigNumber.from(10).pow(18)
   const TOTAL_SUPPLY = DECIMALS.mul(1000000);
-  const START_TIME = 10;
   const END_TIME = 1000;
 
   beforeEach(async () => {
@@ -34,7 +33,7 @@ describe("LinearVesting", () => {
     //Deploying Contract Vesting
     linearVesting = await LinearVesting.deploy(
       migFinance.address,
-      block.timestamp + START_TIME,
+      block.timestamp,
       block.timestamp + END_TIME
     );
 
@@ -96,14 +95,19 @@ describe("LinearVesting", () => {
 
     const afterVesting = TOTAL_SUPPLY.sub(amountToApprove);
     expect(await migFinance.balanceOf(contractSigner.address)).to.equal(afterVesting);
+    expect(await linearVesting.remainingBalance(contractSigner.address)).to.equal(vestedAmount);
 
     //draw call with increased time
     await ethers.provider.send("evm_increaseTime", [increaseTimeBy])
     await ethers.provider.send("evm_mine")
     await linearVesting.drawDown();
 
+    expect(await linearVesting.availableDrawDownAmount(contractSigner.address)).to.equal(0);
+    expect(await linearVesting.remainingBalance(contractSigner.address)).to.equal(0);
     expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal(0);
-    expect(await migFinance.balanceOf(contractSigner.address)).to.equal("999989535000000000000000");
+    
+    const afterDrwan = afterVesting.add(vestedAmount.mul(995).div(1000))
+    expect(await migFinance.balanceOf(contractSigner.address)).to.equal(afterDrwan); //999989535000000000000000
   });
 });
 

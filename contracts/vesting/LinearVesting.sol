@@ -26,6 +26,14 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     /// @notice start of vesting period as a timestamp
     //uint256 public constant FEE_DECIMAL= 10000;
 
+    modifier checkStartTime() {
+        require(
+            _getNow() >= start,
+            "Staking:checkReward:: ERR_START_TIME_NOT_REACHED"
+        );
+        _;
+    }
+
     /**
      * @notice Construct a new vesting contract
      */
@@ -59,7 +67,7 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     function createVestingSchedules(
         address[] calldata _beneficiaries,
         uint256[] calldata _amounts
-    ) external override onlyOwner returns (bool) {
+    ) external override onlyOwner checkStartTime returns (bool) {
         require(
             _beneficiaries.length > 0,
             "VestingContract::createVestingSchedules: ERR_NO_BENEFICIARY"
@@ -90,6 +98,7 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         external
         override
         onlyOwner
+        checkStartTime
         returns (bool)
     {
         return _createVestingSchedule(_beneficiary, _amount);
@@ -162,8 +171,11 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         view
         override
         returns (uint256)
-    {
-        return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
+    {   
+        if(vestedAmount[_beneficiary] >= (totalDrawn[_beneficiary]))
+            return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
+        else
+            return 0;
     }
 
     // Internal
@@ -246,10 +258,12 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         view
         returns (uint256 _amount)
     {
-        if (_getNow() <= end) {
+        if (_getNow() <= end || ( vestedAmount[_beneficiary] < (totalDrawn[_beneficiary])) ) {
             // the cliff period has not ended, no tokens to draw down
+            // or vested amount is less then total drawn amount
             return 0;
-        } else {
+        } 
+        else{
             return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
         }
     }

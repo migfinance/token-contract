@@ -6,7 +6,7 @@ const { BigNumber } = ethers;
 
 use(solidity);
 
-describe("LinearVesting", () => {
+describe("Staking", () => {
   let staking, migFinanceReward, demoStakeToken;
   let contractSigner;
 
@@ -22,7 +22,7 @@ describe("LinearVesting", () => {
 
   beforeEach(async () => {
     const MigFinanceRewardToken = await ethers.getContractFactory("MigFinance");
-    const DemoStakeToken = await ethers.getContractFactory("MockToken");
+    const DemoStakeToken = await ethers.getContractFactory("MockStakeToken");
     const Staking = await ethers.getContractFactory("Staking");
 
     //Deploying Contract MigFinance
@@ -95,6 +95,7 @@ describe("LinearVesting", () => {
     // const reward = await staking.checkReward("0")
 
     await staking.claim("0");
+
     expect(await staking.totalStakedAmount()).to.equal("0");
   });
 
@@ -121,11 +122,14 @@ describe("LinearVesting", () => {
     await ethers.provider.send("evm_increaseTime", [94694400]);
     await ethers.provider.send("evm_mine");
     const reward = await staking.checkReward("0")
-    console.log(reward,"rewarddd")
     await staking.claim("0");
     expect(await staking.totalStakedAmount()).to.equal("0");
     expect(await demoStakeToken.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY);
-    expect(await migFinanceReward.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(stakeAmount));
+    
+    let rewardBalanceUser = TOTAL_SUPPLY.sub(REWARD_TOKEN_AMOUNT)
+    rewardBalanceUser = rewardBalanceUser.add(reward.mul(995).div(1000))
+
+    expect(await migFinanceReward.balanceOf(contractSigner.address)).to.equal(rewardBalanceUser);
 
   });
 
