@@ -17,6 +17,7 @@ describe("LinearVesting", () => {
   const DECIMALS = BigNumber.from(10).pow(18)
   const TOTAL_SUPPLY = DECIMALS.mul(1000000);
   const END_TIME = 1000;
+  const CLIFF_TIME = 500;
 
   beforeEach(async () => {
     const MigFinance = await ethers.getContractFactory("MigFinance");
@@ -34,7 +35,8 @@ describe("LinearVesting", () => {
     linearVesting = await LinearVesting.deploy(
       migFinance.address,
       block.timestamp,
-      block.timestamp + END_TIME
+      block.timestamp + END_TIME,
+      CLIFF_TIME
     );
 
     await linearVesting.deployed();
@@ -59,7 +61,7 @@ describe("LinearVesting", () => {
     expect(await migFinance.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(amountToApprove));
   });
 
-  it("should not draw down Beneficiary amount before end time", async () => {
+  it("should not draw down Beneficiary amount before cliff time", async () => {
     //approve tokens
     const amountToApprove = BigNumber.from(700).mul(DECIMALS);
     const vestedAmount = amountToApprove.mul(99).div(100); //693 tokens
@@ -80,8 +82,8 @@ describe("LinearVesting", () => {
     expect(await migFinance.balanceOf(contractSigner.address)).to.equal(TOTAL_SUPPLY.sub(amountToApprove));
   });
 
-  it("should draw down Beneficiary amount", async () => {
-    const increaseTimeBy = 2679410
+  it("should draw down whole Beneficiary amount", async () => {
+    const increaseTimeBy = END_TIME 
     const amountToApprove = BigNumber.from(700).mul(DECIMALS);
     const vestedAmount = amountToApprove.mul(99).div(100); //693 tokens
 
@@ -100,14 +102,16 @@ describe("LinearVesting", () => {
     //draw call with increased time
     await ethers.provider.send("evm_increaseTime", [increaseTimeBy])
     await ethers.provider.send("evm_mine")
+
+    //draw down after end time
     await linearVesting.drawDown();
 
     expect(await linearVesting.availableDrawDownAmount(contractSigner.address)).to.equal(0);
     expect(await linearVesting.remainingBalance(contractSigner.address)).to.equal(0);
-    expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal(0);
+    expect(await linearVesting.vestedAmount(contractSigner.address)).to.equal(vestedAmount);
     
-    const afterDrwan = afterVesting.add(vestedAmount.mul(995).div(1000))
-    expect(await migFinance.balanceOf(contractSigner.address)).to.equal(afterDrwan); //999989535000000000000000
+    const afterDrwan = afterVesting.add(vestedAmount.mul(99).div(100))
+    expect(await migFinance.balanceOf(contractSigner.address)).to.equal(afterDrwan); //999986070000000000000000
   });
 });
 

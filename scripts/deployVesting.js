@@ -5,10 +5,10 @@ const { vestingConfig, waitBeforeVerification } = require("../config/config");
 const contractPath = "contracts/vesting/LinearVesting.sol:LinearVesting";
 
 const main = async () => {
-  console.log("LinearVesting deploying with Arguments:", vestingConfig.token, vestingConfig.startTime, vestingConfig.endTime)
+  console.log("LinearVesting deploying with Arguments:", vestingConfig.token, vestingConfig.startTime, vestingConfig.endTime,vestingConfig.cliffPeriod);
 
   const LinearVesting = await hre.ethers.getContractFactory("LinearVesting");
-  const linearVesting = await LinearVesting.deploy(vestingConfig.token, vestingConfig.startTime, vestingConfig.endTime);
+  const linearVesting = await LinearVesting.deploy(vestingConfig.token, vestingConfig.startTime, vestingConfig.endTime,vestingConfig.cliffPeriod);
 
   await linearVesting.deployed();
 

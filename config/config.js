@@ -16,6 +16,7 @@ const vestingConfig = {
   token: migFinanceTokenDeployed.address,
   startTime: Math.floor(Date.now() / 1000),
   endTime: Math.floor(Date.now() / 1000) + 43200,
+  cliffPeriod: 3600
 };
 
 const stakingConfig = {

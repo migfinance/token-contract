@@ -36,6 +36,7 @@ interface ILinearVesting {
      * @dev Must be called directly by the beneficiary assigned the tokens in the schedule
      * @return _amount
      * @return _totalDrawn
+     * @return _lastDrawnAt
      * @return _remainingBalance
      */
     function vestingScheduleForBeneficiary(address _beneficiary)
@@ -44,6 +45,7 @@ interface ILinearVesting {
         returns (
             uint256 _amount,
             uint256 _totalDrawn,
+            uint256 _lastDrawnAt,
             uint256 _remainingBalance
         );
 

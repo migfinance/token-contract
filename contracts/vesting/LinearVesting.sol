@@ -14,6 +14,9 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     /// @notice end of vesting period as a timestamp
     uint256 public end;
 
+    /// @notice cliff duration in seconds	
+    uint256 public cliffDuration;
+
     /// @notice amount vested for a beneficiary. Note beneficiary address can not be reused
     mapping(address => uint256) public vestedAmount;
 
@@ -22,9 +25,9 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
 
     /// @notice ERC20 token we are vesting
     IERC20 public token;
-
-    /// @notice start of vesting period as a timestamp
-    //uint256 public constant FEE_DECIMAL= 10000;
+    	
+    /// @notice last drawn down time (seconds) per beneficiary	
+    mapping(address => uint256) public lastDrawnAt;
 
     modifier checkStartTime() {
         require(
@@ -40,11 +43,14 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
     constructor(
         address _token,
         uint256 _startTime,
-        uint256 _endTime
+        uint256 _endTime,
+        uint256 _cliffDuration
     ) {
         token = IERC20(_token);
         start = _startTime;
         end = _endTime;
+        cliffDuration = _cliffDuration;
+
 
         predefinedBeneficiaries();
     }
@@ -128,6 +134,7 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
      * @dev Must be called directly by the beneficiary assigned the tokens in the schedule
      * @return _amount
      * @return _totalDrawn
+     * @return _lastDrawnAt
      * @return _remainingBalance
      */
     function vestingScheduleForBeneficiary(address _beneficiary)
@@ -137,12 +144,14 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         returns (
             uint256 _amount,
             uint256 _totalDrawn,
+            uint256 _lastDrawnAt,
             uint256 _remainingBalance
         )
     {
         return (
             vestedAmount[_beneficiary],
             totalDrawn[_beneficiary],
+            lastDrawnAt[_beneficiary],
             vestedAmount[_beneficiary] - (totalDrawn[_beneficiary])
         );
     }
@@ -228,6 +237,9 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
             "VestingContract::_drawDown: ERR_NO_AMOUNT_WITHDRAWABLE"
         );
 
+        // Update last drawn to now	
+        lastDrawnAt[_beneficiary] = _getNow();
+
         // Increase total drawn amount
         totalDrawn[_beneficiary] = totalDrawn[_beneficiary] + (amount);
 
@@ -242,7 +254,7 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
             token.transfer(_beneficiary, amount),
             "VestingContract::_drawDown: ERR_TOKEN_TRANSFER"
         );
-        vestedAmount[_beneficiary] -= amount;
+        //vestedAmount[_beneficiary] -= amount;
 
         emit DrawDown(_beneficiary, amount);
 
@@ -253,18 +265,45 @@ contract LinearVesting is ReentrancyGuard, Ownable, ILinearVesting {
         return block.timestamp;
     }
 
-    function _availableDrawDownAmount(address _beneficiary)
-        internal
-        view
-        returns (uint256 _amount)
-    {
-        if (_getNow() <= end || ( vestedAmount[_beneficiary] < (totalDrawn[_beneficiary])) ) {
+    //function _availableDrawDownAmount(address _beneficiary)
+    //    internal
+    //    view
+    //    returns (uint256 _amount)
+    //{
+    //    if (_getNow() <= end || ( vestedAmount[_beneficiary] < (totalDrawn[_beneficiary])) ) {
+    //        // the cliff period has not ended, no tokens to draw down
+    //        // or vested amount is less then total drawn amount
+    //        return 0;
+    //    } 
+    //    else{
+    //        return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
+    //    }
+    //}
+
+     function _availableDrawDownAmount(address _beneficiary) internal view returns (uint256 _amount) {
+
+        // Cliff Period
+        if (_getNow() <= start + cliffDuration) {
             // the cliff period has not ended, no tokens to draw down
-            // or vested amount is less then total drawn amount
             return 0;
-        } 
-        else{
-            return vestedAmount[_beneficiary] - (totalDrawn[_beneficiary]);
         }
+
+        // Schedule complete
+        if (_getNow() > end) {
+            return vestedAmount[_beneficiary] - totalDrawn[_beneficiary];
+        }
+
+        // Schedule is active
+
+        // Work out when the last invocation was
+        uint256 timeLastDrawnOrStart = lastDrawnAt[_beneficiary] == 0 ? start : lastDrawnAt[_beneficiary];
+
+        // Find out how much time has past since last invocation
+        uint256 timePassedSinceLastInvocation = _getNow() - timeLastDrawnOrStart;
+
+        // Work out how many due tokens - time passed * rate per second
+        uint256 drawDownRate = vestedAmount[_beneficiary]/(end-start);
+        uint256 amount = timePassedSinceLastInvocation * drawDownRate;
+        return amount;
     }
 }
