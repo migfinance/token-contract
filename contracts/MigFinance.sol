@@ -11,7 +11,7 @@ contract MigFinance is ERC20, Ownable, Pausable {
 
     uint256 public initialBurnRate = 100; //1%;
     uint256 public afterFirstMonthBurnRate = 50; //0.5%;   15000
-    uint256 public initialSupply = 1000000;                                    
+    uint256 public initialSupply = 1000000;
 
     uint256 public start;
 
