@@ -16,7 +16,7 @@ contract Staking is Context, Ownable, ReentrancyGuard {
 
     struct DepositInfo {
         uint256 amount;
-        uint256 startBlock;
+        uint256 startTime;
         uint256 amountWithdrawn;
     }
 
@@ -28,6 +28,7 @@ contract Staking is Context, Ownable, ReentrancyGuard {
             id < userInfo[msg.sender].length,
             "Staking:checkReward:: ERR_INVALID_ID"
         );
+        _;
     }
 
     constructor(address _stakeToken, address _rewardToken) {
@@ -49,7 +50,7 @@ contract Staking is Context, Ownable, ReentrancyGuard {
 
         DepositInfo memory depositInfo;
         depositInfo.amount = amount;
-        depositInfo.startBlock = block.number;
+        depositInfo.startTime = block.timestamp;
         userInfo[msg.sender].push(depositInfo);
 
         uint256 stakeId = userInfo[msg.sender].length - 1;
@@ -60,14 +61,17 @@ contract Staking is Context, Ownable, ReentrancyGuard {
     }
 
     function checkReward(uint256 id) public view returns (uint256 reward) {
-        if (id < userInfo[msg.sender].length) return 0;
+        if (id >= userInfo[msg.sender].length) return 0;
 
         DepositInfo storage depositInfo = userInfo[msg.sender][id];
 
         //reward = (currentTime/totalTime) * totalAmountStaked - amountWithdrawn
-        uint256 canClaim = depositInfo.amount *
-            ((block.number - depositInfo.startBlock) / STAKING_PERIOD);
+        uint256 timePassed = block.timestamp - depositInfo.startTime >
+            STAKING_PERIOD
+            ? STAKING_PERIOD
+            : block.timestamp - depositInfo.startTime;
 
+        uint256 canClaim = (depositInfo.amount * timePassed) / STAKING_PERIOD;
         reward = canClaim - depositInfo.amountWithdrawn;
     }
 

@@ -1,8 +1,10 @@
 require("@nomiclabs/hardhat-waffle");
+require("@nomiclabs/hardhat-etherscan");
 require("dotenv").config();
 
 const infuraKey = process.env.INFURA_KEY;
-const privateKey = process.env.PRIVATE_KEY;
+const privateKey = [process.env.PRIVATE_KEY_1,process.env.PRIVATE_KEY_2,process.env.PRIVATE_KEY_3];
+const apiKey = process.env.API_KEY;
 
 // This is a sample Hardhat task. To learn how to create your own go to
 // https://hardhat.org/guides/create-task.html
@@ -27,7 +29,14 @@ module.exports = {
     kovan: {
       url: `https://kovan.infura.io/v3/${infuraKey}`,
       accounts: privateKey
+    },
+    bscTestnet: {
+      url: `https://data-seed-prebsc-1-s1.binance.org:8545/`,
+      accounts: privateKey
     }
+  },
+  etherscan: {
+    apiKey
   },
   solidity: "0.8.5",
   mocha: {
